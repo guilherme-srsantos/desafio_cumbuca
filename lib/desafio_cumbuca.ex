@@ -10,9 +10,9 @@ defmodule DesafioCumbuca do
 
   """
 
-
   def main(args) do
     try do
+      KvsServer.start_link()
       start_server()
     catch
       :exit, reason ->
@@ -44,23 +44,26 @@ defmodule DesafioCumbuca do
   end
 
   defp handle_set(key, value) do
-    IO.puts("SET")
+    KvsServer.set(key, value)
   end
 
   defp handle_get(key) do
-    IO.puts("GET")
+    KvsServer.get(key)
   end
 
   defp handle_begin_transaction() do
     IO.puts("BEGIN TRANSACTION")
+    KvsServer.begin_transaction()
   end
 
   defp handle_transaction_rollback() do
     IO.puts("TRANSACTION ROLLBACK")
+    KvsServer.rollback_transaction()
   end
 
   defp handle_transaction_commit() do
     IO.puts("TRANSACTION COMMIT")
+    KvsServer.commit_transaction()
   end
 
 end
