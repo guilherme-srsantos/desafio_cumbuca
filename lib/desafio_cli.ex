@@ -1,16 +1,16 @@
-defmodule DesafioCumbuca do
+defmodule DesafioCli do
   @moduledoc """
-  Documentation for `DesafioCumbuca`.
+  Documentation for `DesafioCli`.
   """
 
   @doc """
   ## Examples
 
-      iex> DesafioCumbuca.main(1)
+      iex> DesafioCli.main(1)
 
   """
 
-  def main(args) do
+  def main(_args) do
     try do
       KvsServer.start_link()
       start_server()
@@ -35,35 +35,41 @@ defmodule DesafioCumbuca do
   defp handle_command(command) do
     case String.split(command) do
       ["SET", key, value] -> handle_set(key, value)
+      ["SET", _] -> IO.puts("ERR \" Invalid syntax\"")
       ["GET", key] -> handle_get(key)
       ["BEGIN"] -> handle_begin_transaction()
       ["ROLLBACK"] -> handle_transaction_rollback()
       ["COMMIT"] -> handle_transaction_commit()
-      _ -> IO.puts("ERR \"Comando #{command} invalido\"")
+      _ -> IO.puts("ERR \"No command #{command}\"")
     end
   end
 
   defp handle_set(key, value) do
-    KvsServer.set(key, value)
+    KvsServer.set(key, Utils.format_value(value))
   end
 
   defp handle_get(key) do
-    KvsServer.get(key)
+    case KvsServer.get(key) do
+      nil -> IO.puts("NIL")
+      value -> IO.puts(Utils.format_value(value))
+    end
   end
 
   defp handle_begin_transaction() do
-    IO.puts("BEGIN TRANSACTION")
-    KvsServer.begin_transaction()
+    transaction_level = KvsServer.begin_transaction()
+    IO.puts(transaction_level)
   end
 
   defp handle_transaction_rollback() do
-    IO.puts("TRANSACTION ROLLBACK")
-    KvsServer.rollback_transaction()
+    case KvsServer.rollback_transaction() do
+      {:error, message} -> IO.puts("ERR \"#{message}\"")
+      transaction_level -> IO.puts(transaction_level)
+    end
   end
 
   defp handle_transaction_commit() do
-    IO.puts("TRANSACTION COMMIT")
-    KvsServer.commit_transaction()
+    transaction_level = KvsServer.commit_transaction()
+    IO.puts(transaction_level)
   end
 
 end
