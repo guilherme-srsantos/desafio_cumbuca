@@ -1,6 +1,7 @@
 defmodule KvsServer do
   use GenServer
 
+  @persistence_file "desafio_cli.dat"
   def start_link do
     GenServer.start_link(__MODULE__, %{}, name: __MODULE__)
   end
@@ -47,7 +48,7 @@ defmodule KvsServer do
         new_current = Map.put(current, key, value)
         new_state = %{state | transactions: [new_current | tl(state.transactions)]}
         {existed, new_state}
-  end
+    end
 
     {:reply, {existed, value}, new_state}
   end
@@ -97,5 +98,23 @@ defmodule KvsServer do
         {:reply, length(rest), new_state}
     end
   end
+
+  defp load_state do
+    case File.read(@persistence_file) do
+      {:ok, binary} ->
+        try do
+          :erlang.binary_to_term(binary)
+        rescue
+          _ -> %{store: %{}, transactions: []}
+        end
+      {:error, _} ->
+        %{store: %{}, transactions: []}
+    end
+  end
+
+  defp save_state(state) do
+    binary = :erlang.term_to_binary(state)
+    File.write!(@persistence_file, binary)
+    state
   end
 end
