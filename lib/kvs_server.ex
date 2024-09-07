@@ -29,37 +29,73 @@ defmodule KvsServer do
 
 
   @impl true
-  def init(state) do
-    {:ok, %{store: %{}, transactions: []}}
+  def init(_) do
+    state = load_state()
+    {:ok, state}
   end
 
   @impl true
   def handle_call({:set, key, value}, _from, state) do
-    IO.puts("set on server #{key}, #{value}")
-    {:reply, state}
+    {existed, new_state} = case state.transactions do
+      [] ->
+        existed = Map.has_key?(state.store, key)
+        new_store = Map.put(state.store, key, value)
+        new_state = %{state | store: new_store}
+        {existed, save_state(new_state)}
+      [current | _] ->
+        existed = Map.has_key?(current, key)
+        new_current = Map.put(current, key, value)
+        new_state = %{state | transactions: [new_current | tl(state.transactions)]}
+        {existed, new_state}
   end
 
-  @impl true
+    {:reply, {existed, value}, new_state}
+  end
+
+
   def handle_call({:get, key}, _from, state) do
-    IO.puts("get on server #{key}")
-    {:noreply, state}
+    value = case state.transactions do
+      [] -> Map.get(state.store, key)
+      [current | _] -> Map.get(current, key, Map.get(state.store, key))
+    end
+
+    {:reply, value, state}
   end
 
-  @impl true
   def handle_call(:begin, _from, state) do
-    IO.puts("begin transaction on server")
-    {:noreply, state}
+    new_transactions = [Map.new() | state.transactions]
+    new_state = %{state | transactions: new_transactions}
+    {:reply, length(new_transactions), new_state}
   end
 
-  @impl true
-  def handle_call(:commit, _from, state) do
-    IO.puts("commit transaction")
-    {:noreply, state}
-  end
-
-  @impl true
   def handle_call(:rollback, _from, state) do
-    IO.puts("rollback transaction")
-    {:noreply, state}
+    case state.transactions do
+      [] ->
+        {:reply, {:error, "Cannot rollback at transaction level 0"}, state}
+      [_ | rest] ->
+        new_state = %{state | transactions: rest}
+        {:reply, length(rest), new_state}
+    end
+  end
+
+  def handle_call(:commit, _from, state) do
+    case state.transactions do
+      [] ->
+        {:reply, 0, state}
+      [current | rest] ->
+        new_store = case rest do
+          [] ->
+            merged_store = Map.merge(state.store, current)
+            save_state(%{state | store: merged_store, transactions: []})
+            merged_store
+          [parent | _] -> Map.merge(parent, current)
+        end
+        new_state = %{state |
+          store: (if rest == [], do: new_store, else: state.store),
+          transactions: (if rest == [], do: [], else: [new_store | tl(rest)])
+        }
+        {:reply, length(rest), new_state}
+    end
+  end
   end
 end
