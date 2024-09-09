@@ -1,21 +1,5 @@
 # DesafioCumbuca
 
-**TODO: Add description**
+This project is a command-line application built with Elixir that interacts with a key-value store using GenServer. It supports basic key-value operations such as SET and GET, along with transaction management commands (BEGIN, ROLLBACK, COMMIT).
 
-## Installation
-
-If [available in Hex](https://hex.pm/docs/publish), the package can be installed
-by adding `desafio_cumbuca` to your list of dependencies in `mix.exs`:
-
-```elixir
-def deps do
-  [
-    {:desafio_cumbuca, "~> 0.1.0"}
-  ]
-end
-```
-
-Documentation can be generated with [ExDoc](https://github.com/elixir-lang/ex_doc)
-and published on [HexDocs](https://hexdocs.pm). Once published, the docs can
-be found at <https://hexdocs.pm/desafio_cumbuca>.
 
