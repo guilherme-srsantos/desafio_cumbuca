@@ -16,9 +16,9 @@ defmodule DesafioCli do
       start_server()
     catch
       :exit, reason ->
-        IO.puts("Aplicacao finalizada #{inspect(reason)}")
+        IO.puts("Application stopped #{inspect(reason)}")
       error ->
-        IO.puts("Erro de execucao #{inspect(error)}")
+        IO.puts("Execution error #{inspect(error)}")
     end
   end
 
